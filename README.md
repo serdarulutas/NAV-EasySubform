@@ -8,19 +8,12 @@ In Dynamics NAV (Navision), accessing a parent form from a subform has its chall
 Step-by-step
 * Identify each form on which you want to expose such communication.
 * Identify one form to hold the automation variable that acts as "manager" (or "hub") to facilitate communication between objects
-* On each form, create a global automation variable with "WithEvents" property = Yes. Create three functions on each form called "Event1()", "Event2()", "Event3()" and call these functions from the events of automation variable. Why is that is because overriding automation variables sometimes disappears codes behind their events so it is safer to keep such code in different functions. 
-
-So it would look like this:
-
+* On each form, create a global automation variable with "WithEvents" property = Yes. Create three functions on each form called "Event1()", "Event2()", "Event3()" and call these functions from the events of automation variable. Why is that is because overriding automation variables sometimes disappears codes behind their events so it is safer to keep such code in different functions.  So it would look like this:
 CurrFormAutomation::Event1()
 Event1();
-
 CurrFormAutomation::Event2()
 Event2();
-
 CurrFormAutomation::Event3()
 Event3();
-
-
-* 
+ 
 
