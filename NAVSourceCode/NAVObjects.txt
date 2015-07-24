@@ -1,0 +1,453 @@
+OBJECT Table 50000 Subform Table
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/16/15;
+    Time=[ 9:24:24 AM];
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+  }
+  FIELDS
+  {
+    { 1   ;   ;Entry No.           ;Integer       ;AutoIncrement=Yes }
+    { 2   ;   ;Text                ;Text250        }
+  }
+  KEYS
+  {
+    {    ;Entry No.                               ;Clustered=Yes }
+  }
+  FIELDGROUPS
+  {
+  }
+  CODE
+  {
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Form 50000 Parent Form
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/17/15;
+    Time=12:58:34 PM;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Width=8360;
+    Height=990;
+    OnCloseForm=BEGIN
+                  //clear memory
+                  IF NOT ISCLEAR(CurrFormAutomation) THEN BEGIN
+                    CurrFormAutomation.EmptyHashtable();
+                    CLEAR(CurrFormAutomation);
+                  END;
+
+                  IF NOT ISCLEAR(GlobalAutomation) THEN BEGIN;
+                    GlobalAutomation.RemoveAutomations();
+                    CLEAR(GlobalAutomation);
+                  END;
+                END;
+
+  }
+  CONTROLS
+  {
+    { 1000000004;CommandButton;4950;0;2200;550  ;CaptionML=ENU=Launch Form;
+                                                 OnPush=BEGIN
+                                                          LaunchForm();
+                                                        END;
+                                                         }
+    { 1000000000;TextBox;2090 ;0    ;2530 ;440  ;CaptionML=ENU=Form name:;
+                                                 SourceExpr=FormName }
+    { 1000000001;Label  ;0    ;0    ;1980 ;440  ;ParentControl=1000000000 }
+    { 1000000002;TextBox;1100 ;550  ;7260 ;440  ;HorzGlue=Both;
+                                                 VertGlue=Bottom;
+                                                 Editable=No;
+                                                 Border=No;
+                                                 SourceExpr=StatusText }
+    { 1000000003;Label  ;0    ;550  ;990  ;440  ;HorzGlue=Left;
+                                                 VertGlue=Bottom;
+                                                 CaptionML=ENU=Status: }
+  }
+  CODE
+  {
+    VAR
+      GlobalAutomation@1000000004 : Automation "{92B53DE3-37BA-4B6D-8BCA-6AF7F3E233CB} 1.0:{4280FD0D-AC3B-3E13-A19E-AD5DB8E99C84}:'NAVAutomation'.NAVAutomation";
+      CurrFormAutomation@1000000001 : Automation "{92B53DE3-37BA-4B6D-8BCA-6AF7F3E233CB} 1.0:{4280FD0D-AC3B-3E13-A19E-AD5DB8E99C84}:'NAVAutomation'.NAVAutomation" WITHEVENTS;
+      PARENT@1000000003 : TextConst 'ENU=PARENT';
+      FormName@1000000008 : Text[50];
+      StatusText@1000000000 : Text[1024];
+
+    PROCEDURE Event1@1000000000();
+    BEGIN
+    END;
+
+    PROCEDURE Event2@1000000001();
+    VAR
+      Command2@1000000000 : Text[50];
+      Value2@1000000001 : Text[1024];
+    BEGIN
+      IF  NOT ISCLEAR(CurrFormAutomation) THEN BEGIN
+        Command2 := CurrFormAutomation.GetValue('COMMAND');
+        IF Command2 = 'UPDATESTATUS' THEN BEGIN
+          Value2 := CurrFormAutomation.GetValue('STATUSTEXT');
+          StatusText := Value2;
+          CurrForm.UPDATE(FALSE);
+        END
+      END;
+    END;
+
+    PROCEDURE Event3@1000000002();
+    BEGIN
+    END;
+
+    PROCEDURE LaunchForm@1000000003();
+    VAR
+      Form2@1000000001 : Form 50001;
+    BEGIN
+      IF ISCLEAR(GlobalAutomation) THEN BEGIN
+        CREATE(GlobalAutomation);
+      END;
+
+
+      IF ISCLEAR(CurrFormAutomation) THEN BEGIN
+        CREATE(CurrFormAutomation);
+        GlobalAutomation.AddAutomation(CurrFormAutomation,PARENT);
+      END;
+
+
+      IF ISCLEAR(CurrFormAutomation) THEN
+        ERROR('Current form automation is null.');
+
+      IF FormName <> '' THEN BEGIN
+        IF GlobalAutomation.HasAutomation(FormName) THEN
+          ERROR('This form name is un use. Please use a different form name');
+
+        Form2.SetParentAutomation(GlobalAutomation,FormName,PARENT);
+        Form2.RUN;
+      END;
+    END;
+
+    EVENT CurrFormAutomation@1000000001::Event1@1001();
+    BEGIN
+      Event1();
+    END;
+
+    EVENT CurrFormAutomation@1000000001::Event2@1002();
+    BEGIN
+      Event2;
+    END;
+
+    EVENT CurrFormAutomation@1000000001::Event3@1003();
+    BEGIN
+      Event3();
+    END;
+
+    EVENT GlobalAutomation@1000000004::Event1@1001();
+    BEGIN
+    END;
+
+    EVENT GlobalAutomation@1000000004::Event2@1002();
+    BEGIN
+    END;
+
+    EVENT GlobalAutomation@1000000004::Event3@1003();
+    BEGIN
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
+OBJECT Form 50001 Subform
+{
+  OBJECT-PROPERTIES
+  {
+    Date=07/17/15;
+    Time=12:55:59 PM;
+    Modified=Yes;
+    Version List=;
+  }
+  PROPERTIES
+  {
+    Width=7810;
+    Height=6930;
+    SourceTable=Table50000;
+    DataCaptionExpr='';
+    SourceTableTemporary=Yes;
+    OnOpenForm=BEGIN
+                 CurrForm.CAPTION := CurrFormName;
+               END;
+
+    OnCloseForm=BEGIN
+                  IF NOT ISCLEAR(CurrFormAutomation) THEN BEGIN
+                    CurrFormAutomation.EmptyHashtable();
+                    GlobalAutomation.RemoveAutomation(CurrFormAutomation.GetAutomationName());
+                    CLEAR(CurrFormAutomation);
+                  END;
+                END;
+
+    OnInsertRecord=BEGIN
+                     //AutoIncrement doesnt work in temp records.. Maintain "Entry No." here
+                     NewEntryNo += 1;
+                     "Entry No." := NewEntryNo;
+
+                     UpdateStatus('New line '''+Text+'''');
+                   END;
+
+    OnModifyRecord=BEGIN
+                     UpdateStatus('Modified line from '''+xRec.Text+''' to '''+Text+'''');
+                   END;
+
+    OnDeleteRecord=BEGIN
+                     UpdateStatus('Deleted line '''+Text+'''');
+                   END;
+
+  }
+  CONTROLS
+  {
+    { 1000000000;TableBox;0   ;660  ;7810 ;3300 ;Name=Master;
+                                                 HorzGlue=Both;
+                                                 VertGlue=Top }
+    { 1000000001;TextBox;0    ;1650 ;8202 ;440  ;ParentControl=1000000000;
+                                                 InColumn=Yes;
+                                                 SourceExpr=Text }
+    { 1000000002;Label  ;0    ;0    ;0    ;0    ;ParentControl=1000000001;
+                                                 InColumnHeading=Yes }
+    { 1000000005;CommandButton;1870;4840;2310;550;
+                                                 VertGlue=Bottom;
+                                                 CaptionML=ENU=Copy Text:;
+                                                 OnPush=BEGIN
+                                                          MoveText;
+                                                        END;
+                                                         }
+    { 1000000006;TextBox;4180 ;4180 ;3410 ;550  ;VertGlue=Bottom;
+                                                 SourceExpr=DestinationFormName }
+    { 1000000003;Label  ;0    ;0    ;2750 ;440  ;CaptionML=ENU=Current Form Name: }
+    { 1000000004;TextBox;2750 ;0    ;4290 ;440  ;Editable=No;
+                                                 Border=No;
+                                                 SourceExpr=CurrFormName }
+    { 1000000007;Label  ;0    ;4180 ;4070 ;550  ;HorzGlue=Left;
+                                                 VertGlue=Bottom;
+                                                 CaptionML=ENU=Enter Destination Form Name: }
+    { 1000000008;Label  ;0    ;4840 ;1760 ;550  ;HorzGlue=Left;
+                                                 VertGlue=Bottom;
+                                                 FontBold=Yes;
+                                                 LeaderDots=No;
+                                                 CaptionML=ENU=Operations }
+    { 1000000009;CommandButton;770;5720;770;550 ;HorzGlue=Right;
+                                                 VertGlue=Bottom;
+                                                 CaptionML=ENU=U;
+                                                 OnPush=BEGIN
+                                                          ChangeFormPosition(0);
+                                                        END;
+                                                         }
+    { 1000000010;CommandButton;770;6380;770;550 ;HorzGlue=Right;
+                                                 VertGlue=Bottom;
+                                                 CaptionML=ENU=D;
+                                                 OnPush=BEGIN
+                                                          ChangeFormPosition(2);
+                                                        END;
+                                                         }
+    { 1000000011;CommandButton;1540;6050;770;550;HorzGlue=Right;
+                                                 VertGlue=Bottom;
+                                                 CaptionML=ENU=R;
+                                                 OnPush=BEGIN
+                                                          ChangeFormPosition(1);
+                                                        END;
+                                                         }
+    { 1000000012;CommandButton;0;6050;770 ;550  ;HorzGlue=Right;
+                                                 VertGlue=Bottom;
+                                                 CaptionML=ENU=L;
+                                                 OnPush=BEGIN
+                                                          ChangeFormPosition(3);
+                                                        END;
+                                                         }
+    { 1000000014;MenuButton;4290;4840;2090;550  ;HorzGlue=Left;
+                                                 VertGlue=Bottom;
+                                                 CaptionML=ENU=Properties;
+                                                 Menu=MENUITEMS
+                                                 {
+                                                   { ID=1000000016;
+                                                     CaptionML=ENU=Hide;
+                                                     OnPush=BEGIN
+                                                              ChangeProperty(0);
+                                                            END;
+                                                             }
+                                                   { ID=1000000017;
+                                                     CaptionML=ENU=Show;
+                                                     OnPush=BEGIN
+                                                              ChangeProperty(1);
+                                                            END;
+                                                             }
+                                                   { ID=1000000018;
+                                                     CaptionML=ENU=Activate;
+                                                     OnPush=BEGIN
+                                                              ChangeProperty(2);
+                                                            END;
+                                                             }
+                                                 }
+                                                  }
+  }
+  CODE
+  {
+    VAR
+      GlobalAutomation@1000000001 : Automation "{92B53DE3-37BA-4B6D-8BCA-6AF7F3E233CB} 1.0:{4280FD0D-AC3B-3E13-A19E-AD5DB8E99C84}:'NAVAutomation'.NAVAutomation";
+      CurrFormAutomation@1000000000 : Automation "{92B53DE3-37BA-4B6D-8BCA-6AF7F3E233CB} 1.0:{4280FD0D-AC3B-3E13-A19E-AD5DB8E99C84}:'NAVAutomation'.NAVAutomation" WITHEVENTS;
+      CurrFormName@1000000005 : Text[50];
+      NewEntryNo@1000000006 : Integer;
+      DestinationFormName@1000000002 : Text[50];
+      STATUS@1000000003 : TextConst 'ENU=%2 on form#%1';
+      ParentAutomationName@1000000004 : Text[50];
+
+    PROCEDURE SetParentAutomation@1000000001(VAR GlobalAutomation2@1000000000 : Automation "{92B53DE3-37BA-4B6D-8BCA-6AF7F3E233CB} 1.0:{4280FD0D-AC3B-3E13-A19E-AD5DB8E99C84}:'NAVAutomation'.NAVAutomation";CurrFormName2@1000000002 : Text[50];ParentFormName@1000000001 : Text[50]);
+    BEGIN
+      GlobalAutomation := GlobalAutomation2;
+      CREATE(CurrFormAutomation);
+      CurrFormName := CurrFormName2;
+      ParentAutomationName := ParentFormName;
+
+      GlobalAutomation.AddAutomation(CurrFormAutomation,CurrFormName);
+    END;
+
+    PROCEDURE Event1@1000000010();
+    VAR
+      Command2@1000000000 : Code[50];
+      Value2@1000000002 : Text[250];
+      SubCommand2@1000000001 : Code[50];
+      MoveBy@1000000003 : Integer;
+    BEGIN
+      //it is better to define event function separately because NAV can clear out automation events..
+      //when variable-subtypes are updated
+      Command2 := CurrFormAutomation.GetValue('COMMAND');
+      IF Command2 = '' THEN
+        EXIT;
+
+      IF Command2 = 'MOVETEXT' THEN BEGIN
+        Value2 := CurrFormAutomation.GetValue('TEXTVALUE');
+        IF Value2 <> '' THEN BEGIN
+          AddText(Value2);
+        END;
+      END ELSE IF Command2 = 'CHANGEPROPERY' THEN BEGIN
+        SubCommand2 :=  CurrFormAutomation.GetValue('SUBCOMMAND');
+        IF SubCommand2 = 'HIDE' THEN BEGIN
+          CurrForm.VISIBLE := FALSE;
+        END ELSE IF SubCommand2 IN ['SHOW','ACTIVATE'] THEN BEGIN
+          CurrForm.VISIBLE := TRUE;
+          CurrForm.ACTIVATE;
+        END;
+      END ELSE IF Command2 = 'REPOSITION' THEN BEGIN
+        SubCommand2 :=  CurrFormAutomation.GetValue('SUBCOMMAND');
+        MoveBy := 250;
+        IF SubCommand2 = 'UP' THEN BEGIN
+          CurrForm.YPOS := CurrForm.YPOS - MoveBy;
+        END ELSE IF SubCommand2 = 'RIGHT' THEN BEGIN
+          CurrForm.XPOS := CurrForm.XPOS + MoveBy;
+        END ELSE IF SubCommand2 = 'DOWN' THEN BEGIN
+          CurrForm.YPOS := CurrForm.YPOS + MoveBy;
+        END ELSE IF SubCommand2 = 'LEFT' THEN BEGIN
+          CurrForm.XPOS := CurrForm.XPOS - MoveBy;
+        END;
+      END ELSE BEGIN
+        MESSAGE('Command %1 could not be found',Command2);
+      END;
+    END;
+
+    PROCEDURE Event2@1000000011();
+    BEGIN
+    END;
+
+    PROCEDURE Event3@1000000012();
+    BEGIN
+    END;
+
+    PROCEDURE AddText@1000000014(Text2@1000000001 : Text[250]);
+    VAR
+      EntryNo2@1000000000 : Integer;
+    BEGIN
+      RESET;
+      IF FINDLAST THEN
+        EntryNo2 := "Entry No.";
+      EntryNo2 += 1;
+
+      INIT;
+      "Entry No." := EntryNo2;
+      Text := Text2;
+      INSERT;
+      NewEntryNo += 1;
+      CurrForm.UPDATE(FALSE);
+    END;
+
+    LOCAL PROCEDURE MoveText@1000000005();
+    BEGIN
+      IF (NOT ISCLEAR(GlobalAutomation)) AND (DestinationFormName <>'') THEN BEGIN
+        GlobalAutomation.EmptyHashtable_2(DestinationFormName);
+        GlobalAutomation.AddKey_2(DestinationFormName,'COMMAND','MOVETEXT');
+        GlobalAutomation.AddKey_2(DestinationFormName,'TEXTVALUE',Rec.Text);
+        GlobalAutomation.FireEvent_2(DestinationFormName,1);
+      END;
+    END;
+
+    PROCEDURE ChangeProperty@1000000015(Which2@1000000000 : 'Hide,Show,Activate');
+    BEGIN
+      IF (NOT ISCLEAR(GlobalAutomation)) AND (DestinationFormName <>'') THEN BEGIN
+        GlobalAutomation.EmptyHashtable_2(DestinationFormName);
+        GlobalAutomation.AddKey_2(DestinationFormName,'COMMAND','CHANGEPROPERY');
+        GlobalAutomation.AddKey_2(DestinationFormName,'SUBCOMMAND',FORMAT(Which2));
+        GlobalAutomation.FireEvent_2(DestinationFormName,1);
+      END;
+    END;
+
+    PROCEDURE ChangeFormPosition@1000000018(Direction2@1000000000 : 'Up,Right,Down,Left');
+    BEGIN
+      IF (NOT ISCLEAR(GlobalAutomation)) AND (DestinationFormName <>'') THEN BEGIN
+        GlobalAutomation.EmptyHashtable_2(DestinationFormName);
+        GlobalAutomation.AddKey_2(DestinationFormName,'COMMAND','REPOSITION');
+        GlobalAutomation.AddKey_2(DestinationFormName,'SUBCOMMAND',FORMAT(Direction2));
+        GlobalAutomation.FireEvent_2(DestinationFormName,1);
+      END;
+    END;
+
+    PROCEDURE UpdateStatus@1000000000(StatusText2@1000000000 : Text[1024]);
+    VAR
+      ParentAutomation2@1000000001 : Automation "{92B53DE3-37BA-4B6D-8BCA-6AF7F3E233CB} 1.0:{4280FD0D-AC3B-3E13-A19E-AD5DB8E99C84}:'NAVAutomation'.NAVAutomation";
+    BEGIN
+      IF StatusText2 <> '' THEN
+        StatusText2 := STRSUBSTNO(STATUS,CurrFormName,StatusText2);
+
+      IF (NOT ISCLEAR(GlobalAutomation)) THEN BEGIN
+        ParentAutomation2 := GlobalAutomation.GetAutomation(ParentAutomationName);
+        ParentAutomation2.AddKey('COMMAND','UPDATESTATUS');
+        ParentAutomation2.AddKey('STATUSTEXT',StatusText2);
+        ParentAutomation2.FireEvent(2);
+      END;
+    END;
+
+    EVENT CurrFormAutomation@1000000000::Event1@1001();
+    BEGIN
+      Event1();
+    END;
+
+    EVENT CurrFormAutomation@1000000000::Event2@1002();
+    BEGIN
+      Event2();
+    END;
+
+    EVENT CurrFormAutomation@1000000000::Event3@1003();
+    BEGIN
+      Event3();
+    END;
+
+    BEGIN
+    END.
+  }
+}
+
